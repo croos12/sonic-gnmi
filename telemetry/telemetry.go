@@ -483,6 +483,11 @@ func startGNMIServer(telemetryCfg *TelemetryConfig, cfg *gnmi.Config, serverCont
 			gnmi.GenerateJwtSecretKey()
 		}
 
+		opts = append(opts,
+			grpc.MaxRecvMsgSize(256*1024*1024),
+			grpc.MaxSendMsgSize(256*1024*1024),
+		)
+
 		// Setup interceptor chain (includes DPU proxy with Redis-based routing)
 		var err error
 		currentServerChain, err = interceptors.NewServerChain()
