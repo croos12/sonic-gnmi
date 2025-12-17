@@ -484,8 +484,8 @@ func startGNMIServer(telemetryCfg *TelemetryConfig, cfg *gnmi.Config, serverCont
 		}
 
 		opts = append(opts,
-			grpc.MaxRecvMsgSize(256*1024*1024),
-			grpc.MaxSendMsgSize(256*1024*1024),
+			grpc.MaxRecvMsgSize(64*1024*1024),
+			grpc.MaxSendMsgSize(64*1024*1024),
 		)
 
 		// Setup interceptor chain (includes DPU proxy with Redis-based routing)
