@@ -29,6 +29,8 @@ import (
 	"github.com/sonic-net/sonic-gnmi/sonic-gnmi-standalone/pkg/server/config"
 )
 
+const maxMsgSize = 64 * 1024 * 1024
+
 // Server represents the gRPC server and its resources, providing a unified interface
 // for managing the lifecycle of the SONiC gRPC services. It encapsulates the
 // underlying gRPC server instance and network listener for clean resource management.
@@ -117,7 +119,7 @@ func NewInsecureServer(addr string) (*Server, error) {
 
 	// Create insecure gRPC server
 	// nosemgrep: go.grpc.security.grpc-server-insecure-connection.grpc-server-insecure-connection
-	grpcServer := grpc.NewServer()
+	grpcServer := grpc.NewServer(grpc.MaxRecvMsgSize(maxMsgSize))
 	reflection.Register(grpcServer)
 
 	glog.V(1).Infof("Insecure server created successfully, listening on %s", lis.Addr().String())
@@ -168,7 +170,7 @@ func createGRPCServerWithCertManager(certMgr cert.CertificateManager) (*grpc.Ser
 
 	// Create gRPC credentials from TLS config
 	creds := credentials.NewTLS(tlsConfig)
-	server := grpc.NewServer(grpc.Creds(creds))
+	server := grpc.NewServer(grpc.Creds(creds), grpc.MaxRecvMsgSize(maxMsgSize))
 
 	glog.V(1).Infof("gRPC server created with TLS: MinVersion=%x, ClientAuth=%v, CipherSuites=%d",
 		tlsConfig.MinVersion, tlsConfig.ClientAuth, len(tlsConfig.CipherSuites))
@@ -214,7 +216,7 @@ func createTLSServer(certFile, keyFile string) (*grpc.Server, error) {
 		return nil, err
 	}
 
-	server := grpc.NewServer(grpc.Creds(creds))
+	server := grpc.NewServer(grpc.Creds(creds), grpc.MaxRecvMsgSize(maxMsgSize))
 	glog.V(1).Infof("TLS enabled with cert: %s, key: %s", certFile, keyFile)
 	return server, nil
 }
@@ -256,7 +258,7 @@ func createMTLSServer(certFile, keyFile, caCertFile string) (*grpc.Server, error
 	}
 
 	creds := credentials.NewTLS(tlsConfig)
-	server := grpc.NewServer(grpc.Creds(creds))
+	server := grpc.NewServer(grpc.Creds(creds), grpc.MaxRecvMsgSize(maxMsgSize))
 	glog.V(1).Infof("mTLS enabled with cert: %s, key: %s, ca: %s", certFile, keyFile, caCertFile)
 	return server, nil
 }
@@ -265,7 +267,7 @@ func createMTLSServer(certFile, keyFile, caCertFile string) (*grpc.Server, error
 func createInsecureServer() *grpc.Server {
 	// Intentionally insecure for development/testing when --no-tls flag is used
 	// nosemgrep: go.grpc.security.grpc-server-insecure-connection.grpc-server-insecure-connection
-	server := grpc.NewServer()
+	server := grpc.NewServer(grpc.MaxRecvMsgSize(maxMsgSize))
 	glog.V(1).Info("TLS disabled - using insecure connection")
 	return server
 }

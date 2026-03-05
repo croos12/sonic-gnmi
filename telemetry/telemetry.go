@@ -370,7 +370,9 @@ func startGNMIServer(telemetryCfg *TelemetryConfig, cfg *gnmi.Config, serverCont
 			currentServerChain = nil
 		}
 
-		var opts []grpc.ServerOption
+		opts := []grpc.ServerOption{
+			grpc.MaxRecvMsgSize(64 * 1024 * 1024),
+		}
 		var certLoaded int32
 		atomic.StoreInt32(&certLoaded, 0) // Not loaded
 
@@ -472,7 +474,7 @@ func startGNMIServer(telemetryCfg *TelemetryConfig, cfg *gnmi.Config, serverCont
 				MaxConnectionIdle: time.Duration(*telemetryCfg.IdleConnDuration) * time.Second, // duration in which idle connection will be closed, default is inf
 			}
 
-			opts = []grpc.ServerOption{grpc.Creds(credentials.NewTLS(tlsCfg))}
+			opts = append(opts, grpc.Creds(credentials.NewTLS(tlsCfg)))
 
 			if *telemetryCfg.IdleConnDuration > 0 { // non inf case
 				opts = append(opts, grpc.KeepaliveParams(keep_alive_params))

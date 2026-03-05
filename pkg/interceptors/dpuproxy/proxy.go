@@ -149,6 +149,10 @@ func (p *DPUProxy) getConnection(ctx context.Context, dpuIndex, ipAddress string
 		conn, err := grpc.NewClient(
 			target,
 			grpc.WithTransportCredentials(insecure.NewCredentials()),
+			grpc.WithDefaultCallOptions(
+				grpc.MaxCallRecvMsgSize(64*1024*1024),
+				grpc.MaxCallSendMsgSize(64*1024*1024),
+			),
 			grpc.WithKeepaliveParams(keepalive.ClientParameters{
 				Time:                10 * time.Second, // Send keepalive ping every 10s
 				Timeout:             3 * time.Second,  // Wait 3s for ping ack before considering connection dead
