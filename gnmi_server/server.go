@@ -176,7 +176,28 @@ type Config struct {
 	Vrf                 string
 	EnableCrl           bool
 	// Path to the directory where image is stored.
-	ImgDir string
+	ImgDir     string
+	GetOptions func(*Config) ([]grpc.ServerOption, []certprovider.Provider, error)
+	// gnsi.certz mTLS flags
+	CaCertLnk       string // Path to symlink pointing to current CA certificate.
+	SrvCertLnk      string // Path to symlink pointing to current server's certificate.
+	SrvKeyLnk       string // Path to symlink pointing to current server's private key.
+	CaCertFile      string // Path to the first CA certificate.
+	SrvCertFile     string // Path to the first server's certificate.
+	SrvKeyFile      string // Path to the first server's private key.
+	CertCRLConfig   string // Path to the CRL directory. Disable if empty.
+	IntManFile      string // Path to the Integrity Manifest file.
+	CertzMetaFile   string // Path to JSON file with gRPC credential metadata.
+	FedPolicyFile   string // Path to federation policy file.
+	AuthzPolicy     bool   // Enable authz policy.
+	AuthzPolicyFile string // Path to JSON file with authz policies.
+	AuthzMetaFile   string // Path to JSON file with authz metadata.
+	PathzPolicy     bool   // Enable gNMI pathz policy.
+	PathzPolicyFile string // Path to gNMI pathz policy file.
+	PathzMetaFile   string // Path to JSON file with pathz metadata.
+	// gRPC buffer sizes in bytes. 0 means use gRPC defaults (4MB for recv, unlimited for send).
+	RecvMsgSize int
+	SendMsgSize int
 }
 
 // DBusOSBackend is a concrete implementation of OSBackend
@@ -271,7 +292,29 @@ func NewServer(config *Config, opts []grpc.ServerOption) (*Server, error) {
 	}
 	common_utils.InitCounters()
 
-	s := grpc.NewServer(opts...)
+	// Prepend gRPC buffer size options so they apply to both TCP and UDS servers.
+	if config.RecvMsgSize > 0 {
+		commonOpts = append([]grpc.ServerOption{grpc.MaxRecvMsgSize(config.RecvMsgSize)}, commonOpts...)
+	}
+	if config.SendMsgSize > 0 {
+		commonOpts = append([]grpc.ServerOption{grpc.MaxSendMsgSize(config.SendMsgSize)}, commonOpts...)
+	}
+
+	// Set authorization policy.
+	var authzWatcher *authz.FileWatcherInterceptor
+	if config.AuthzPolicy {
+		authzWatcher, err := authz.NewFileWatcher(config.AuthzPolicyFile, authzRefreshingInterval)
+		if err != nil {
+			return nil, err
+		} else {
+			commonOpts = append(commonOpts, grpc.ChainStreamInterceptor(
+				authzWatcher.StreamInterceptor))
+			commonOpts = append(commonOpts, grpc.ChainUnaryInterceptor(
+				authzWatcher.UnaryInterceptor))
+		}
+	}
+
+	s := grpc.NewServer(commonOpts...)
 	reflection.Register(s)
 
 	srv := &Server{
