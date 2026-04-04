@@ -75,6 +75,8 @@ type TelemetryConfig struct {
 	AuthzMetaFile         *string
 	AuthPolicyEnabled     *bool
 	AuthzPolicyFile       *string
+	MaxRecvMsgSize        *int
+	MaxSendMsgSize        *int
 }
 
 func main() {
@@ -200,6 +202,8 @@ func setupFlags(fs *flag.FlagSet) (*TelemetryConfig, *gnmi.Config, error) {
 		AuthzMetaFile:         fs.String("authz_meta", "/keys/authz-version.json", "authz policy metadata JSON file"),
 		AuthPolicyEnabled:     fs.Bool("authz_policy_enabled", false, "Enable authz policy. Require insecure flag to be false."),
 		AuthzPolicyFile:       fs.String("authorization_policy_file", "/keys/authorization_policy.json", "Full path name of the JSON authorization policy file."),
+		MaxRecvMsgSize:        fs.Int("max_recv_msg_size", 4096, "Maximum message size in bytes that the server can receive"),
+		MaxSendMsgSize:        fs.Int("max_send_msg_size", 4096, "Maximum message size in bytes that the server can send"),
 	}
 
 	fs.Var(&telemetryCfg.UserAuth, "client_auth", "Client auth mode(s) - none,cert,password")
@@ -549,6 +553,11 @@ func startGNMIServer(telemetryCfg *TelemetryConfig, cfg *gnmi.Config, serverCont
 
 			gnmi.GenerateJwtSecretKey()
 		}
+
+		commonOpts = append(commonOpts,
+			grpc.MaxRecvMsgSize(*telemetryCfg.MaxRecvMsgSize),
+			grpc.MaxSendMsgSize(*telemetryCfg.MaxSendMsgSize),
+		)
 
 		// Setup interceptor chain (includes DPU proxy with Redis-based routing)
 		var err error
