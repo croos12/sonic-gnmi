@@ -180,8 +180,8 @@ func setupFlags(fs *flag.FlagSet) (*TelemetryConfig, *gnmi.Config, error) {
 		EnableCrl:             fs.Bool("enable_crl", false, "Enable certificate revocation list"),
 		CrlExpireDuration:     fs.Int("crl_expire_duration", 86400, "Certificate revocation list cache expire duration"),
 		ImgDirPath:            fs.String("img_dir", "/tmp/host_tmp", "Directory path where image will be transferred."),
-		MaxRecvMsgSize:        fs.Int("max_recv_msg_size", 4096, "Maximum message size in bytes that the server can receive"),
-		MaxSendMsgSize:        fs.Int("max_send_msg_size", 4096, "Maximum message size in bytes that the server can send"),
+		MaxRecvMsgSize:        fs.Int("max_recv_msg_size", 4*1024*1024, "Maximum message size in bytes that the server can receive"),
+		MaxSendMsgSize:        fs.Int("max_send_msg_size", 4*1024*1024, "Maximum message size in bytes that the server can send"),
 	}
 
 	fs.Var(&telemetryCfg.UserAuth, "client_auth", "Client auth mode(s) - none,cert,password")
