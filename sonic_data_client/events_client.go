@@ -237,11 +237,14 @@ func update_stats(evtc *EventClient) {
 		}
 
 		rclient = redis.NewClient(&redis.Options{
-			Network:     "tcp",
-			Addr:        addr,
-			Password:    "", // no password set,
-			DB:          dbId,
-			DialTimeout: 0,
+			Network:         "tcp",
+			Addr:            addr,
+			Password:        "",
+			DB:              dbId,
+			DialTimeout:     0,
+			PoolSize:        10,
+			MaxIdleConns:    2,
+			ConnMaxIdleTime: 5 * time.Minute,
 		})
 
 		// Init current values for cumulative keys and clear for absolute

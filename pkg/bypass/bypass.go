@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/golang/glog"
 	gnmipb "github.com/openconfig/gnmi/proto/gnmi"
@@ -71,11 +72,14 @@ func getConfigDbClientDefault() (*redis.Client, error) {
 	}
 
 	client := redis.NewClient(&redis.Options{
-		Network:     network,
-		Addr:        addr,
-		Password:    "",
-		DB:          configDbId,
-		DialTimeout: 0,
+		Network:         network,
+		Addr:            addr,
+		Password:        "",
+		DB:              configDbId,
+		DialTimeout:     0,
+		PoolSize:        10,
+		MaxIdleConns:    2,
+		ConnMaxIdleTime: 5 * time.Minute,
 	})
 	return client, nil
 }

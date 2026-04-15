@@ -42,11 +42,14 @@ func (cm *ConnectionManager) PrepareRedis() {
 		return
 	}
 	rclient = redis.NewClient(&redis.Options{
-		Network:     "tcp",
-		Addr:        addr,
-		Password:    "",
-		DB:          db,
-		DialTimeout: 0,
+		Network:         "tcp",
+		Addr:            addr,
+		Password:        "",
+		DB:              db,
+		DialTimeout:     0,
+		PoolSize:        10,
+		MaxIdleConns:    2,
+		ConnMaxIdleTime: 5 * time.Minute,
 	})
 
 	res, _ := rclient.HGetAll(context.Background(), "TELEMETRY_CONNECTIONS").Result()

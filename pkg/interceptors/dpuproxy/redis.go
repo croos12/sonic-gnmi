@@ -2,6 +2,7 @@ package dpuproxy
 
 import (
 	"context"
+	"time"
 
 	"github.com/redis/go-redis/v9"
 )
@@ -32,9 +33,12 @@ func (a *GoRedisAdapter) HGetAll(ctx context.Context, key string) (map[string]st
 // It connects via Unix socket to the specified database.
 func NewRedisClient(socketPath string, db int) *redis.Client {
 	return redis.NewClient(&redis.Options{
-		Network:  "unix",
-		Addr:     socketPath,
-		Password: "", // SONiC Redis has no password
-		DB:       db,
+		Network:         "unix",
+		Addr:            socketPath,
+		Password:        "",
+		DB:              db,
+		PoolSize:        10,
+		MaxIdleConns:    2,
+		ConnMaxIdleTime: 5 * time.Minute,
 	})
 }

@@ -523,14 +523,17 @@ func initRedisDbMap() {
 				return
 			}
 			// DB connector for direct redis operation
-			redisDb := redis.NewClient(&redis.Options{
-				Network:     "unix",
-				Addr:        addr,
-				Password:    "", // no password set
-				DB:          int(dbn),
-				DialTimeout: 0,
-			})
-			RedisDbMap[ns+":"+container+":"+dbName] = redisDb
+		redisDb := redis.NewClient(&redis.Options{
+			Network:         "unix",
+			Addr:            addr,
+			Password:        "",
+			DB:              int(dbn),
+			DialTimeout:     0,
+			PoolSize:        10,
+			MaxIdleConns:    2,
+			ConnMaxIdleTime: 5 * time.Minute,
+		})
+		RedisDbMap[ns+":"+container+":"+dbName] = redisDb
 		}
 	}
 	return
