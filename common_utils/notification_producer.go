@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"strings"
+	"time"
 
 	sdcfg "github.com/sonic-net/sonic-gnmi/sonic_db_config"
 
@@ -29,11 +30,14 @@ func GetRedisDBClient() (*redis.Client, error) {
 		return nil, err
 	}
 	rclient := redis.NewClient(&redis.Options{
-		Network:     "tcp",
-		Addr:        addr,
-		Password:    "", // no password set
-		DB:          db,
-		DialTimeout: 0,
+		Network:         "tcp",
+		Addr:            addr,
+		Password:        "",
+		DB:              db,
+		DialTimeout:     0,
+		PoolSize:        10,
+		MaxIdleConns:    2,
+		ConnMaxIdleTime: 5 * time.Minute,
 	})
 	if rclient == nil {
 		return nil, fmt.Errorf("Cannot create redis client.")
